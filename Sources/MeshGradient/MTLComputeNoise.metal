@@ -15,7 +15,7 @@ float smoothNoise(float x, float y);
 half4 noiseColor(int x, int y, bool isSmooth, float alpha);
 
 // The Kernel
-kernel void computeNoize(texture2d<half, access::write> outTexture [[texture(ComputeNoiseInputIndexOutputTexture)]],
+kernel void computeNoise(texture2d<half, access::write> outTexture [[texture(ComputeNoiseInputIndexOutputTexture)]],
                          constant NoiseUniforms &uniforms [[buffer(ComputeNoiseInputIndexUniforms)]],
                          uint2 gid [[thread_position_in_grid]])
 {
