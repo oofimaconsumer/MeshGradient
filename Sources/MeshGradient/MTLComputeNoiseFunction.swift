@@ -71,7 +71,6 @@ final class MTLComputeNoiseFunction {
         
         encoder.setComputePipelineState(pipelineState)
         encoder.setTexture(noiseTexture, index: Int(ComputeNoiseInputIndexOutputTexture.rawValue))
-        encoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadgroupCounts)
 
         encoder.setBytes(
             &uniforms,
@@ -79,6 +78,7 @@ final class MTLComputeNoiseFunction {
             index: Int(ComputeNoiseInputIndexUniforms.rawValue)
         )
 
+        encoder.dispatchThreadgroups(threadgroups, threadsPerThreadgroup: threadgroupCounts)
         encoder.endEncoding()
 
         commandBuffer.commit()
