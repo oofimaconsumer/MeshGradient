@@ -41,10 +41,12 @@ half4 noiseColor(int x, int y, bool isSmooth, float alpha)
     colorVal = 256.0 * rand(xZoomed, yZoomed);
     
     if (isSmooth) {
-//        colorVal = 256.0 * smoothNoise(xZoomed, yZoomed);
+        colorVal = 256.0 * smoothNoise(xZoomed, yZoomed);
     }
+
+    float colorComponent = half(colorVal) / 255.0;
     
-    return half4(half(colorVal) / 255.0, half(colorVal) / 255.0, half(colorVal) / 255.0, alpha);
+    return half4(colorComponent, colorComponent, colorComponent, alpha);
 }
 
 // Noise Functions
@@ -83,10 +85,3 @@ float rand(int x, int y)
     seed = (seed<< 13) ^ seed;
     return (( 1.0 - ( (seed * (seed * seed * 15731 + 789221) + 1376312589) & 2147483647) / 1073741824.0f) + 1.0f) / 2.0f;
 }
-
-
-
-
-
-
-

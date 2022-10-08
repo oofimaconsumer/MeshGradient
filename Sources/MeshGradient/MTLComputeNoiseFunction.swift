@@ -7,6 +7,7 @@ final class MTLComputeNoiseFunction {
 
     private let device: MTLDevice
     private let pipelineState: MTLComputePipelineState
+    private var cachedTexture: MTLTexture?
     
     init(device: MTLDevice, library: MTLLibrary) throws {
         
@@ -24,7 +25,8 @@ final class MTLComputeNoiseFunction {
         viewportSize: simd_float2,
         pixelFormat: MTLPixelFormat,
         commandQueue: MTLCommandQueue,
-        uniforms: NoiseUniforms
+        uniforms: NoiseUniforms,
+        shouldLoadFromCache: Bool
     ) -> MTLTexture? {
 
         guard
@@ -51,6 +53,10 @@ final class MTLComputeNoiseFunction {
             .renderTarget,
             .pixelFormatView
         ]
+
+        if shouldLoadFromCache, let cachedTexture = cachedTexture {
+            return cachedTexture
+        }
 
         guard
             let noiseTexture = device.makeTexture(descriptor: textureDescriptor),
@@ -83,6 +89,8 @@ final class MTLComputeNoiseFunction {
 
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
+
+        cachedTexture = noiseTexture
 
         return noiseTexture
     }
