@@ -8,8 +8,7 @@ public final class MetalMeshRenderer: NSObject {
 
     private var commandQueue: MTLCommandQueue?
     private var bufferPool: MTLBufferPool?
-    
-    private var computeNoiseFunction: MTLComputeNoiseFunction?
+
     private var computeShuffleCoefficients: MTLComputeShuffleCoefficientsFunction?
     private var computeHermitPatchMatrix: MTLComputeHermitPatchMatrixFunction?
     private var computeMeshTrianglePrimitives: MTLComputeMeshTrianglePrimitivesFunction?
@@ -17,21 +16,16 @@ public final class MetalMeshRenderer: NSObject {
     
     private var viewportSize: vector_float2
     private let subdivisions: Int
-    private let grainAlpha: Float
     private let meshDataProvider: MeshDataProvider
-
-    private var previousPresentedTime: CFTimeInterval = .zero
 
     public init(
         metalKitView mtkView: MTKView?,
         meshDataProvider: MeshDataProvider,
         viewportSize: vector_float2 = .zero,
-        grainAlpha: Float,
         subdivisions: Int = 18
     ) {
         self.viewportSize = viewportSize
         self.subdivisions = subdivisions
-        self.grainAlpha = grainAlpha
         self.meshDataProvider = meshDataProvider
 
         guard
@@ -59,10 +53,6 @@ public final class MetalMeshRenderer: NSObject {
                 library: defaultLibrary,
                 pixelFormat: mtkView?.colorPixelFormat ?? .bgra8Unorm
             )
-
-            if grainAlpha > .zero {
-                computeNoiseFunction = try .init(device: device, library: defaultLibrary)
-            }
             
         } catch {
             assertionFailure(error.localizedDescription)
@@ -90,26 +80,6 @@ public final class MetalMeshRenderer: NSObject {
         }
 
         let grid = meshDataProvider.grid
-        var noiseTexture: MTLTexture?
-
-        if let computeNoise = computeNoiseFunction {
-            let now = CACurrentMediaTime()
-            let shouldLoadFromCache = now - previousPresentedTime > 1000.0
-            previousPresentedTime = now
-            noiseTexture = computeNoise.call(
-                viewportSize: viewportSize,
-                pixelFormat: pixelFormat,
-                commandQueue: commandQueue,
-                uniforms: NoiseUniforms(
-                    isSmooth: 1,
-                    color1: 94,
-                    color2: 168,
-                    color3: 147,
-                    noiseAlpha: grainAlpha
-                ),
-                shouldLoadFromCache: shouldLoadFromCache
-            )
-        }
 
         guard
             let (resultBuffer, _, resultElementsCount) = calculateTriangles(
@@ -126,7 +96,6 @@ public final class MetalMeshRenderer: NSObject {
         if let renderPassDescriptor {
             drawMesh.call(
                 meshVertices: resultBuffer,
-                noise: noiseTexture,
                 meshVerticesCount: resultElementsCount,
                 renderPassDescriptor: renderPassDescriptor,
                 commandBuffer: commandBuffer,

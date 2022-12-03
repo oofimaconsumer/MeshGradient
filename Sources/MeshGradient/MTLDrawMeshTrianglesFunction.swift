@@ -10,11 +10,17 @@ final class MTLDrawMeshTrianglesFunction {
     private let pipelineState: MTLRenderPipelineState
     
     init(device: MTLDevice, library: MTLLibrary, pixelFormat: MTLPixelFormat) throws {
-        guard let prepareToDrawFunction = library.makeFunction(name: "prepareToDrawShader")
-        else { throw MeshGradientError.metalFunctionNotFound(name: "prepareToDrawShader") }
+        guard
+            let prepareToDrawFunction = library.makeFunction(name: "prepareToDrawShader")
+        else {
+            throw MeshGradientError.metalFunctionNotFound(name: "prepareToDrawShader")
+        }
         
-        guard let drawMeshFunction = library.makeFunction(name: "drawRasterizedMesh")
-        else { throw MeshGradientError.metalFunctionNotFound(name: "drawRasterizedMesh") }
+        guard
+            let drawMeshFunction = library.makeFunction(name: "drawRasterizedMesh")
+        else {
+            throw MeshGradientError.metalFunctionNotFound(name: "drawRasterizedMesh")
+        }
         
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
         pipelineDescriptor.label = "Draw mesh pipeline"
@@ -25,15 +31,18 @@ final class MTLDrawMeshTrianglesFunction {
         self.pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
     }
     
-    func call(meshVertices: MTLBuffer,
-              noise: MTLTexture?,
-              meshVerticesCount: Int,
-              renderPassDescriptor: MTLRenderPassDescriptor,
-              commandBuffer: MTLCommandBuffer,
-              viewportSize: simd_float2) {
+    func call(
+        meshVertices: MTLBuffer,
+        meshVerticesCount: Int,
+        renderPassDescriptor: MTLRenderPassDescriptor,
+        commandBuffer: MTLCommandBuffer,
+        viewportSize: simd_float2
+    ) {
         
         assert(meshVerticesCount.isMultiple(of: 3))
-        guard let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
+
+        guard
+            let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
         else {
             assertionFailure()
             return
@@ -49,17 +58,10 @@ final class MTLDrawMeshTrianglesFunction {
         )
         
         renderEncoder.setRenderPipelineState(pipelineState)
-        
-        renderEncoder.setFragmentTexture(noise,
-                                         index: Int(DrawMeshTextureIndexBaseColor.rawValue))
-        
-        renderEncoder.setVertexBuffer(meshVertices,
-                                      offset: 0,
-                                      index: 0)
+        renderEncoder.setVertexBuffer(meshVertices, offset: 0, index: 0)
+
         for i in stride(from: 0, to: meshVerticesCount, by: 3) {
-            renderEncoder.drawPrimitives(type: .triangle,
-                                         vertexStart: i,
-                                         vertexCount: 3)
+            renderEncoder.drawPrimitives(type: .triangle, vertexStart: i, vertexCount: 3)
         }
         
         renderEncoder.endEncoding()
